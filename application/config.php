@@ -19,7 +19,7 @@ return [
     // 应用调试模式
     'app_debug'              => true,
     // 应用Trace
-    'app_trace'              => false,
+    'app_trace'              => true,
     // 应用模式状态
     'app_status'             => '',
     // 是否支持多模块
@@ -296,7 +296,13 @@ return [
                 'code_err' =>  ['msg'=>'账户余额不足','code'=>'2003','data'=>[]],
                 'code_password' =>  ['msg'=>'支付密码错误','code'=>'2004','data'=>[]],
                 "code_receipt_ok" =>['msg'=>'收货成功','code'=>'2000','data'=>[]],
-                "code_receipt_fail" =>['msg'=>'收货失败','code'=>'2005','data'=>[]]
+                "code_receipt_fail" =>['msg'=>'收货失败','code'=>'2005','data'=>[]],
+                "code_send_ok" =>['msg'=>'发货成功','code'=>'2000','data'=>[]],
+                "code_send_fail" =>['msg'=>'发货失败','code'=>'2007','data'=>[]],
+                "code_refund_ok" =>['msg'=>'您的退款申请已提交，等待商家审核.....','code'=>'2000','data'=>[]],
+                "code_refund_fail" =>['msg'=>'您的退款申请提交失败','code'=>'2006','data'=>[]],
+                "code_refund_cancel_ok" =>['msg'=>'退款取消成功','code'=>'2000','data'=>[]],
+                "code_refund_cancel_fail" =>['msg'=>'退款取消失败','code'=>'2007','data'=>[]]
             ]
         ],
         'result' =>[

@@ -165,6 +165,36 @@
             </div>
         </div>
     </div>
+    <!--订单信息详情-->
+    <div class="modal fade" id="orderDetails" tabindex="-1" role="dialog"  style="background: rgba(0,0,0,0.8)" aria-labelledby="exampleModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content" style="margin-top: 250px">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="title1">订单详情</h4>
+                </div>
+                <div class="modal-body">
+                    <p>收货地址信息：</p>
+                    <p>{{ orderDetailsList.receivername}},{{orderDetailsList.phone}},{{orderDetailsList.provinces}} {{orderDetailsList.cities}} {{orderDetailsList.areas}} {{orderDetailsList.content}}</p>
+                    <p>卖家信息:{{orderDetailsList.sellerid}}</p>
+                    <p>订单信息:</p>
+                    <p>订单号：20180000{{orderDetailsList.orderid}}</p>
+                    <p>订单创建时间:{{orderDetailsList.createtime}}</p>
+                    <p v-if="orderDetailsList.paytime">付款时间:{{orderDetailsList.paytime}}</p>
+                    <p v-if="orderDetailsList.deliver_time">发货时间:{{orderDetailsList.deliver_time}}</p>
+                    <p v-if="orderDetailsList.takedeliver_time">确认收货时间:{{orderDetailsList.takedeliver_time}}</p>
+                    <p v-if="orderDetailsList.complete_time">交易关闭时间:{{orderDetailsList.complete_time}}</p>
+                    <p v-if="orderDetailsList.applytime && orderDetailsList.orderstate==6">申请退款时间:{{orderDetailsList.applytime}}</p>
+                    <p v-if="orderDetailsList.applyoktime">退款成功时间:{{orderDetailsList.applyoktime}}</p>
+                    <p v-if="orderDetailsList.why">退款原因:{{orderDetailsList.why}}</p>
+                </div>
+                <div class="modal-footer" style="text-align: center">
+                    <h3 style="text-align: right;color: red;font-size: 16px" v-if="orderDetailsList.orderstate==5">订单状态:交易成功</h3>
+                    <h3 style="text-align: right;color: red;font-size: 16px" v-if="orderDetailsList.orderstate==2">订单状态:交易关闭</h3>
+                    <h3 style="text-align: right;color: red;font-size: 16px"  v-if="orderDetailsList.orderstate==7">订单状态:退款成功，交易关闭</h3>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!--导航栏-->
 <div class="nav" style="margin-bottom: -10px;">
@@ -456,7 +486,7 @@
                                 <div class="panel-heading" style="background: none">
                                     <p>待支付</p>
                                     <p>
-                                        <span>{{ wait.time }}</span> |
+                                        <span>{{ wait.createtime }}</span> |
                                         <span>{{ wait.sellerid }}</span> |
                                         订单号：<span>20180000{{ wait.orderid }}</span> |
                                         <span>在线支付</span>
@@ -495,9 +525,10 @@
                             <div class="panel panel-default" v-for="yet in showAlready">
                                 <div class="panel-heading" style="background: none">
                                     <p v-if="yet.orderstate==3">订单待处理，等待卖家发货</p>
-                                    <p v-else>订单已出库，等待买家收货</p>
+                                    <p v-if="yet.orderstate==6" style="color:red;">订单处于退款审核状态</p>
+                                    <p v-if="yet.orderstate==4" >订单已出库，等待买家收货</p>
                                     <p>
-                                        <span>{{ yet.time }}</span> |
+                                        <span>{{ yet.createtime }}</span> |
                                         <span>{{ yet.sellerid }}</span> |
                                         订单号：<span>20180000{{ yet.orderid }}</span> |
                                         <span>在线支付</span>
@@ -512,7 +543,8 @@
                                             <td class="mobile_xm_table_button">
                                                 <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none" v-if="yet.orderstate==3" >等待发货</button><br v-if="yet.orderstate==3">
                                                 <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none" v-if="yet.orderstate==4" @click="receipt(yet.orderid)">确认收货</button><br v-if="yet.orderstate==4">
-                                                <button class="btn btn-primary" style="color:black;background: none" v-if="yet.orderstate==3">退款</button>
+                                                <button class="btn btn-primary" style="color:black;background: none" v-if="yet.orderstate==3 || yet.orderstate==4" @click="refund(yet.orderid)">退款</button>
+                                                <button class="btn btn-primary" style="color:black;background: none" v-if="yet.orderstate==6"  @click="cancelRefund(yet.orderid)">退款审核中</button>
                                             </td>
                                         </tr>
                                         <tr style="height:100px"  class="waitTr" v-for="(val,k) in showAlreadyRelation" v-if="val.s_orderid == yet.orderid">
@@ -532,15 +564,16 @@
                             {if isset($pageToAlready)}{$pageToAlready}{/if}
                         </div>
                         <div class="layui-tab-item">
-                            <div class="panel panel-default" v-for="all in showAlready">
+                            <div class="panel panel-default" v-for="all in showAll">
                                 <div class="panel-heading" style="background: none">
                                     <p v-if="all.orderstate==1">待支付</p>
                                     <p v-if="all.orderstate==2">交易关闭</p>
                                     <p v-if="all.orderstate==3">订单待处理，等待卖家发货</p>
                                     <p v-if="all.orderstate==4">订单已出库，等待买家收货</p>
                                     <p v-if="all.orderstate==5">交易成功</p>
+                                    <p v-if="all.orderstate==6" style="color: red;">订单处于退款审核状态</p>
                                     <p>
-                                        <span>{{ all.time }}</span> |
+                                        <span>{{ all.createtime }}</span> |
                                         <span>{{ all.sellerid }}</span> |
                                         订单号：<span>20180000{{ all.orderid }}</span> |
                                         <span>在线支付</span>
@@ -552,21 +585,25 @@
                                 <div class="panel-body">
                                     <table style="position: relative">
                                         <tr style="position: absolute;right: 0">
-                                            <td class="mobile_xm_table_button" v-if="all.orderstate==2 || all.orderstate==5">
+                                            <td class="mobile_xm_table_button" v-if="all.orderstate==5">
                                                 <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none">申请售后</button><br>
-                                                <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none">订单详情</button><br>
+                                                <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none" @click="orderDetails(all.orderid)"  data-toggle="modal" data-target="#orderDetails">订单详情</button><br>
+                                            </td>
+                                            <td class="mobile_xm_table_button" v-if="all.orderstate==2">
+                                                <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none" @click="orderDetails(all.orderid)"  data-toggle="modal" data-target="#orderDetails">订单详情</button><br>
                                             </td>
                                             <td class="mobile_xm_table_button" v-if="all.orderstate==1">
                                                 <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none"  @click="goToPay(all.orderid)">立即支付</button><br>
                                                 <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none" @click="cancelOrder(all.orderid)">取消订单</button><br>
                                             </td>
-                                            <td class="mobile_xm_table_button" v-if="all.orderstate==4 || all.orderstate==3">
+                                            <td class="mobile_xm_table_button" v-if="all.orderstate==4 || all.orderstate==3 || all.orderstate==6">
                                                 <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none" v-if="all.orderstate==3">等待发货</button><br v-if="all.orderstate==3">
                                                 <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none" v-if="all.orderstate==4" @click="receipt(all.orderid)">确认收货</button><br v-if="all.orderstate==4">
-                                                <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none">退款</button>
+                                                <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none" v-if="all.orderstate==3 || all.orderstate==4" @click="refund(all.orderid)">退款</button>
+                                                <button class="btn btn-primary" style="color:black;background: none" v-if="all.orderstate==6"  @click="cancelRefund(all.orderid)">退款审核中</button>
                                             </td>
                                         </tr>
-                                        <tr style="height:100px"  class="waitTr" v-for="(a,m) in showAlreadyRelation" v-if="a.s_orderid == all.orderid">
+                                        <tr style="height:100px"  class="waitTr" v-for="(a,m) in showAllRelation" v-if="a.s_orderid == all.orderid">
                                             <!--删除订单中的个别商品-->
                                             <td style="width: 10%;">
                                                 <img :src="a.imgurl" class="trade_img">
@@ -831,6 +868,9 @@
     var get_already_order='{:url("frontIndex/User/userCenter")}?who=6&lg=1';
     var go_pay='{:url("frontIndex/User/pay")}';
     var go_to_receipt='{:url("frontIndex/User/receipt")}';
+    var go_to_check_state='{:url("frontIndex/User/checkOrderState")}';
+    var go_to_apply='{:url("frontIndex/User/apply")}';
+    var go_to_cancel_order='{:url("frontIndex/User/cancelRefundOrder")}';
     var show_to_json_already = '{if isset($info["already"])}{$info["already"]}{/if}';
     var show_to_already=null;
     var show_to_alreadyRelation=null;
@@ -840,6 +880,14 @@
     }
     //全部订单
     var get_all_order='{:url("frontIndex/User/userCenter")}?who=6&lg=2';
+    var show_to_json_all = '{if isset($info["all"])}{$info["all"]}{/if}';
+    var show_to_all=null;
+    var show_to_allRelation=null;
+    if(show_to_json_all!=''){
+        show_to_all =JSON.parse(show_to_json_all)[0].data;
+        show_to_allRelation=JSON.parse(show_to_json_all )[1];
+    }
+    var get_order_user='{:url("frontIndex/User/getOrderDetails")}';
 </script>
 <script src="__JS__/font/user.js"></script>
 </html>

@@ -256,9 +256,13 @@ var app=new Vue({
         //待支付订单
         showWait:show_to_wait,
         showWaitRelation:show_to_waitRelation,
-        //待支付订单
+        //已支付订单
         showAlready:show_to_already,
-        showAlreadyRelation:show_to_alreadyRelation
+        showAlreadyRelation:show_to_alreadyRelation,
+        //全部订单
+        showAll:show_to_all,
+        showAllRelation:show_to_allRelation,
+        orderDetailsList:[]
     },
     methods:{
         //充值
@@ -674,7 +678,7 @@ var app=new Vue({
         //确认收货
         receipt:function(id){
             //layui框架的弹层 pass为空不执行回掉
-            layer.prompt({title: '验证登陆密码',formType: 1,anim: 1}, function(pass,index){
+            layer.prompt({title: '身份验证，请输入登陆密码',formType: 1,anim: 1}, function(pass,index){
                 layer.close(index);
                 var m=layer.load();
                 $.ajax({
@@ -696,6 +700,97 @@ var app=new Vue({
                     }
                 });
             });
+        },
+        //退款订单处理
+       refund:function(id){
+           $.ajax({
+               type:'post',
+               url:go_to_check_state,
+               data:{id:id},
+               success:function(res){
+                   var check=JSON.parse(res);
+                   if(check[0].orderid==3){
+                       layer.prompt({title:'退款原因',formType:2,anim:1},function(text,index){
+                         layer.close(index);
+                         var m=layer.load();
+                         $.ajax({
+                                type:'post',
+                                url:go_to_apply,
+                                data:{id:id,text:text},
+                                success:function(res){
+                                    layer.close(m);
+                                    var result=JSON.parse(res);
+                                    if(result.code==2000){
+                                        layer.msg(result.msg,{icon:1,anim:5},function(){
+                                            location.reload();
+                                        })
+                                        }else{
+                                            layer.msg(result.msg,{icon:5,anim:4});
+                                    }
+                                }
+                            });
+                        });
+                   }else{
+                       layer.confirm('订单处于发货状态，退款后需要卖家收到货后进行返款,确定继续退款',function(p){
+                           layer.close(p);
+                           layer.prompt({title:'退款原因',formType:2,anim:1},function(text,index){
+                               layer.close(index);
+                               var m=layer.load();
+                               $.ajax({
+                                   type:'post',
+                                   url:go_to_apply,
+                                   data:{id:id,text:text},
+                                   success:function(res){
+                                       layer.close(m);
+                                       var result=JSON.parse(res);
+                                       if(result.code==2000){
+                                           layer.msg(result.msg,{icon:1,anim:5},function(){
+                                               location.reload();
+                                           })
+                                       }else{
+                                           layer.msg(result.msg,{icon:5,anim:4});
+                                       }
+                                   }
+                               });
+                           });
+                       });
+                   }
+               }
+           });
+       },
+        //取消退款
+        cancelRefund:function(id){
+            layer.confirm('退款订单处于审核状态，是否取消退款，继续购买',function(index){
+               layer.close(index);
+                var x=layer.load();
+                $.ajax({
+                    type:'post',
+                    url:go_to_cancel_order,
+                    data:{id:id},
+                    success:function(res){
+                        var result=JSON.parse(res);
+                        if(result.code==2000){
+                            layer.close(x);
+                            layer.msg(result.msg,{icon:1,time:2000},function(){
+                                location.reload();
+                            })
+                        }else{
+                            layer.msg(result.msg,{icon:2});
+                        }
+                    }
+                });
+            });
+        },
+        //查看订单详情
+        orderDetails:function(id){
+            $.ajax({
+                type:'post',
+                url:get_order_user,
+                data:{id:id},
+                success:function(res){
+                    this.orderDetailsList = JSON.parse(res)[0];
+                }.bind(this)
+            })
         }
     },
     mounted: function () {

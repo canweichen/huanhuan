@@ -277,29 +277,6 @@ var app=new Vue({
     mounted: function () {
         //初始化省市区
         this.getProvince();
-     /*   $.ajax({
-            type:'post',
-            url:get_province,
-            success:function(res){
-                this.provinceList=JSON.parse(res);
-            }.bind(this)
-        });
-        $.ajax({
-            type:'post',
-            url:get_city,
-            data:{"province":110000},
-            success:function(res){
-                this.cityList=JSON.parse(res);
-            }.bind(this)
-        });
-        $.ajax({
-            type:'post',
-            url:get_areas,
-            data:{"city":110100},
-            success:function(res){
-                this.areasList=JSON.parse(res);
-            }.bind(this)
-        });*/
     }
 });
 
