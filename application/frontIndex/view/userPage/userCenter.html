@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!--禁止缩放-->
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <title>个人中心</title>
+    <link rel="stylesheet" href="__STATIC__/layui/css/layui.css"  media="all"/>
+    <link rel="stylesheet" href="__CSS__/font/userCenter.css"/>
+    <link rel="stylesheet" href="__STATIC__/bootstrap/css/bootstrap.min.css"/>
+    <script src="__STATIC__/public/jquery.js"></script>
+    <script src="__STATIC__/public/vue.js"></script>
+    <script src="__STATIC__/bootstrap/js/bootstrap.min.js"></script>
+    <script src="__STATIC__/layui/layui.all.js"></script>
+    <script src="__STATIC__/layui/layui.js"></script>
+    <style>
+        @media (min-width:768px){
+            /*-----移动端切换标签按钮大屏隐藏------*/
+            .open_mobile{
+                display: none;
+            }
+        }
+        @media (max-width: 768px) {
+            /*----待支付订单 按钮 自适应-------*/
+            .mobile_xm_table{
+                width: 40%;
+                text-align:center;
+            }
+            .mobile_xm_table_button>button{
+                font-size: 10px;
+            }
+            /*-------侧边栏菜单遮罩层移动端样式-------------*/
+            #mobile{
+                width: 100%;
+                height: 100%;
+                position: fixed;
+                z-index: 12;
+                background: rgba(0,0,0,0.9);
+                display: none;
+            }
+            /*--------放菜单栏容器移动端样式--------------*/
+            .content_left{
+                display: none;
+                position: fixed;
+                width:40%;
+                height: 30%;
+                z-index: 100;
+            }
+            /*---------主体内容移动端隐藏样式-------------*/
+            .content_right{
+                width:100%;
+                text-align: center;
+            }
+            /*---------广告栏移动端隐藏样式-------------*/
+            .content_middle{
+                display: none;
+            }
+            /*-----------地址在小屏下占满屏幕---------*/
+            .address>div{
+                width:90%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div id="my_app">
+<!--移动端模态框-->
+<div id="mobile"></div>
+<!--添加/修改地址模态框-->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="false" style="background: rgba(0,0,0,0.8)">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="margin-top: 180px">
+            <div class="modal-header">
+                <h4 class="modal-title" id="exampleModalLabel">{{ navMessage }}</h4>
+            </div>
+            <div class="modal-body" style="height: 380px">
+                <form>
+                    <div class="form-group">
+                        <input type="text" class="form-control" v-model="receiver" placeholder="姓名" style="width: 40%;height: 50px;display: inline-block">
+                        <input type="text" class="form-control" v-model="telephone"  placeholder="手机号" style="width: 50%;height: 50px;display: inline-block">
+                    </div>
+                    <!--省份-->
+                    <div  class="form-group">
+                        <select v-model="province" @change="getCity([1,1,1])"  class="form-control" style="height: 50px;">
+                            <option v-for="x in provinceList" :value="x.provinceid" province>{{ x.province }}</option>
+                        </select>
+                    </div>
+                    <!--市区-->
+                    <div  class="form-group">
+                        <select v-model="city" @change="getArea([1,1,1])" name="quiz2" class="form-control" style="height: 50px;">
+                            <option v-for="y in cityList" :value="y.cityid">{{ y.city }}</option>
+                        </select>
+                    </div>
+                    <!--区县-->
+                    <div  class="form-group">
+                        <select v-model="area" name="quiz3" class="form-control" style="height: 50px;">
+                            <option v-for="z in areasList" :value="z.areaid">{{ z.area }}</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <textarea class="form-control" id="message-text" v-model="details" placeholder="详细住址"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <input type="checkbox" placeholder=""  v-model="defaultAdd" style="display: inline-block;width: 16px;height: 16px"/>
+                        <span style="display: inline-block;font-size: 15px;">设为默认地址</span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="text-align: center">
+                <button type="button" class="btn btn-primary btn-lg" v-if="seem" @click="saveAddress()">保存</button>
+                <button type="button" class="btn btn-primary btn-lg" v-else  @click="alterFromAddress()">保存修改</button>
+                <button type="button" class="btn btn-default btn-lg" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!---修改用户基本信息弹层----->
+<div class="modal fade" id="alter_user" tabindex="-1" role="dialog"  style="background: rgba(0,0,0,0.8)" aria-labelledby="exampleModalLabel" data-backdrop="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="margin-top: 250px">
+            <div class="modal-header">
+                <h4 class="modal-title" id="alter_title">修改用户信息</h4>
+            </div>
+            <div class="modal-body" style="height: 200px">
+                <form>
+                    <div class="form-group" style="text-align: center">
+                        <input type="text" class="form-control" value={$info['info'][0]['nickname']} name="uName" placeholder="姓名" style="width: 80%;height: 50px;display: inline-block;margin-bottom: 20px">
+                        <input type="date" class="form-control" value={$info['info'][0]['birthday']} name='uBirth' placeholder="生日" style="width: 80%;height: 50px;display: inline-block;margin-bottom:20px">
+                        <br>
+                        <p>
+                            <i class="layui-icon" style="color:blue;">&#xe662;</i>
+                            <input type="radio" class="form-control" checked  value='男' name="uSex" placeholder="性别" style="width:5%;height: 20px;display: inline-block;margin-bottom:20px">
+                            <i class="layui-icon" style="color:red;">&#xe661;</i>
+                            <input type="radio" class="form-control" value='女' name="uSex" placeholder="性别" style="width: 5%;height: 20px;display: inline-block;margin-bottom:20px">
+                        </p>
+                       </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="text-align: center">
+                <button type="button" class="btn btn-primary btn-lg" id="alterUser">保存</button>
+                <button type="button" class="btn btn-default btn-lg" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+ <!--充值-->
+    <div class="modal fade" id="addMoney" tabindex="-1" role="dialog"  style="background: rgba(0,0,0,0.8)" aria-labelledby="exampleModalLabel" data-backdrop="false">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content" style="margin-top: 250px">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="title">充值中心</h4>
+                </div>
+                <div class="modal-body" style="height: 80px">
+                    <form>
+                        <div class="form-group" style="text-align: center">
+                            <input type="number" class="form-control" v-model="money" name='money' placeholder="充值金额" style="width: 80%;height: 50px;display: inline-block;margin-bottom:20px">
+                            <br>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer" style="text-align: center">
+                    <button type="button" class="btn btn-primary btn-lg" @click="addMoney()">保存</button>
+                    <button type="button" class="btn btn-default btn-lg" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--导航栏-->
+<div class="nav" style="margin-bottom: -10px;">
+        <ul class="layui-nav nav_bar_menu" style="text-align:right">
+            <li class="layui-nav-item" style="float: left;">
+                <img src="__STATIC__/images/nav-list.png" class="open_mobile"/>
+            </li>
+            <li class="layui-nav-item">
+                <a href="javascript:;"><img src={$info['info'][0]['headimg']} class="layui-nav-img">我</a>
+                <dl class="layui-nav-child">
+                    <dd><a href="{:url('user/User/information')}">完善个人资料</a></dd>
+                    <dd id="1a"><a href="javascript:;">{$info['info'][0]['userid']}</a></dd>
+                    <dd  @click="exitLogin()"><a>退出登陆</a></dd>
+                </dl>
+            </li>
+            <li class="layui-nav-item">
+                <a href="{:url('frontIndex/Login/login')}">登陆<span class="layui-badge">9</span></a>
+            </li>
+            <li class="layui-nav-item">
+                <a href="{:url('frontIndex/Register/register')}">注册<span class="layui-badge-dot"></span></a>
+            </li>
+        </ul>
+    </div>
+<!--主体-->
+<div class="content layui-row">
+    <!--左边菜单栏-->
+        <div class="content_left layui-col-md3 layui-col-sm3 layui-col-xs3">
+            <ul class="layui-nav layui-nav-tree layui-inline" lay-filter="demo" style="width:100%;">
+                    <!--lay-filter监听导航点击事件-->
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a>个人中心</a>
+                        <dl class="layui-nav-child">
+                            <dd id="1"><a href="{:url('frontIndex/User/userCenter')}?who=1">个人信息</a></dd>
+                            <dd id="2"><a href="{:url('frontIndex/User/userCenter')}?who=2">收货地址</a></dd>
+                            <dd id="3"><a href="{:url('frontIndex/User/userCenter')}?who=3">我的收藏</a></dd>
+                            <dd id="4"><a href="{:url('frontIndex/User/userCenter')}?who=4">财务明细</a></dd>
+                            <dd id="5"><a href="{:url('frontIndex/User/userCenter')}?who=5">我的消息</a></dd>
+                        </dl>
+                    </li>
+                    <li class="layui-nav-item  layui-nav-itemed">
+                        <a>订单中心</a>
+                        <dl class="layui-nav-child">
+                            <dd id="6"><a href="{:url('frontIndex/User/userCenter')}?who=6&lg=0">买家订单</a></dd>
+                            <dd id="7"><a href="{:url('frontIndex/User/userCenter')}?who=7">商家订单</a></dd>
+                        </dl>
+                    </li>
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a>发布闲置中心</a>
+                        <dl class="layui-nav-child">
+                            <dd  id="8"><a href="{:url('frontIndex/User/userCenter')}?who=8">发布闲置</a></dd>
+                            <dd id="9"><a href="{:url('frontIndex/User/userCenter')}?who=9">我的商品</a></dd>
+                        </dl>
+                    </li>
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a>维权中心</a>
+                        <dl class="layui-nav-child">
+                            <dd id="10"><a href="javascript:;">退款管理</a></dd>
+                            <dd id="11"><a href="javascript:;">投诉管理</a></dd>
+                        </dl>
+                    </li>
+                </ul>
+        </div>
+    <!--右边菜单标签-->
+        <div class="content_right layui-col-md9 layui-col-sm9 layui-col-xs9">
+            <div class="user">
+                <h1 style="text-align: left">基础资料</h1>
+                <div class="layui-row" style="margin-top: 5%;">
+                   <!-- <div class="layui-col-xs4 layui-col-sm5 layui-col-md4">-->
+                        <div class="grid-demo info">
+                                <img src={$info['info'][0]['headimg']} id="images">
+                                <div class="layui-upload">
+                                    <button type="button" class="layui-btn layui-icon" id="heading">
+                                        &#xe67c; 修改头像
+                                    </button>
+                                    <div class="layui-upload-list" style="display: inline">
+                                        <span id="demoText"></span>
+                                    </div>
+                                    <button class="layui-btn" data-toggle="modal" data-target="#addMoney">充值</button>
+                                    <span style="font-size: 20px">账户余额：</span>
+                                    <span style="font-size: 20px">{$info['info'][0]['money']}</span>
+                                </div>
+                        </div>
+                    <hr>
+                    <!--</div>-->
+                    <!--<div class="layui-col-xs8 layui-col-sm7 layui-col-md8">-->
+                        <div class="grid-demo show_info">
+                            <p>用户账号：
+                                <span>{$info['info'][0]['userid']}</span>
+                            </p>
+                            <p>用户昵称：
+                                <span>{$info['info'][0]['nickname']}</span>
+                            </p>
+                            <p>用户性别：
+                                <span>{$info['info'][0]['sex']}</span>
+                            </p>
+                            <p>用户生日：
+                                <span>{$info['info'][0]['birthday']}</span>
+                            </p>
+                            <p style="float: right">
+                                <a href="{:url('frontIndex/User/information')}" class="">完善资料</a>
+                                <button class="layui-btn"  data-toggle="modal" data-target="#alter_user" id="openShade"><i class="layui-icon">&#xe642;</i></button>
+                            </p>
+                        </div> <!--grid-demo-->
+                   <!-- </div>-->
+                </div>
+                <hr>
+            </div>
+            <div class="address">
+                <h1  style="text-align: left">收货地址</h1>
+                <!--添加地址-->
+                <div class="add_address">
+                    <i class="layui-icon" data-toggle="modal" data-target="#exampleModal" @click="addAddress()">&#xe61f;</i>
+                    <p>添加新地址</p>
+                </div>
+                <!--显示地址-->
+                <div class="show_address" v-for="address in addressList">
+                    <p style="font-size: 18px;margin: 10px 0 10px 5%">{{ address.receivername }}</p>
+                    <p>{{ address.phone }}</p>
+                    <p>
+                        <span>{{ address.provinces }}</span>
+                        <span>{{ address.cities }}</span>
+                        <span>{{ address.areas }}</span>
+                    </p>
+                    <p>{{ address.content }}</p>
+                    <p></p>
+                    <!--layer 按钮组件 编辑 删除-->
+                    <div class="layui-btn-group operation_btn">
+                        <button class="layui-btn layui-btn-primary layui-btn-sm"  v-if="address.addressflag" @click="alreadyAddress()">
+                            <i class="layui-icon" style="color:orangered;">&#xe618;默认地址</i>
+                        </button>
+                        <button class="layui-btn layui-btn-primary layui-btn-sm"  v-else  @click="defaultAddress(address.addressid)">
+                            <i class="layui-icon">设为默认地址</i>
+                        </button>
+                        <button class="layui-btn layui-btn-primary layui-btn-sm" @click="alterAddress(address.addressid)" data-toggle="modal" data-target="#exampleModal">
+                            <i class="layui-icon">&#xe642;</i>
+                        </button>
+                        <button class="layui-btn layui-btn-primary layui-btn-sm" @click="deleteAddress(address.addressid)">
+                            <i class="layui-icon">&#xe640;</i>
+                        </button>
+                    </div>
+                </div>
+                {if isset($pageToAddress)}{$pageToAddress}{/if}
+            </div>
+            <div class="collect">
+                <h1 style="text-align: left">我的收藏</h1>
+                <div class="panel panel-default delStyle" v-for="collect in showCollect" style="cursor: pointer">
+                    <div class="panel-body">
+                        <img :src="collect.imgurl" style="width: 80%;height: 80%;display: inline-block"/>
+                    </div>
+                    <div class="panel-footer" style="background: none;text-align: left">
+                        <p style="overflow: hidden;white-space: nowrap;text-overflow: ellipsis;font-size: 1.5rem">{{ collect.tradename }}</p>
+                        <p>￥<em style="font-size: 2rem">{{ collect.nowprice }}</em></p>
+                        <p style="color: red">
+                            <span v-if="collect.tradestate">在售商品</span>
+                            <span v-else>已售出</span>
+                            <i class="layui-icon delCol" style="float: right;font-size: 3rem" @click="deleteCollect(collect.c_id)">&#xe640;</i>
+                        </p>
+                    </div>
+                </div>
+                {if isset($pageToCollect)}{$pageToCollect}{/if}
+            </div>
+            <div class="record">
+                <h1>财务明细</h1>
+                <div class="panel panel-default" style="margin: 2% 0 0 1%">
+                    <!-- Default panel contents -->
+                    <div class="panel-heading">
+                        <div class="layui-form">
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">开始</label>
+                                    <div class="layui-input-inline">
+                                        <input type="text" class="layui-input" id="start_record" placeholder="yyyy-MM-dd HH:mm:ss">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">结束</label>
+                                    <div class="layui-input-inline">
+                                        <input type="text" class="layui-input" id="end_record" placeholder="yyyy-MM-dd HH:mm:ss">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                   <button class="btn btn-primary">搜索</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Table -->
+                    <table class="table">
+                        <tr>
+                            <th>交易账号</th>
+                            <th>流水号</th>
+                            <th>入账时间</th>
+                            <th>订单号</th>
+                            <th>交易类型</th>
+                            <th>金额</th>
+                        </tr>
+                        <tr>
+                            <td>18059310000</td>
+                            <td>2018012501</td>
+                            <td>2018-1-25 12:00:00</td>
+                            <td>20180125001</td>
+                            <td>购买</td>
+                            <td>1000</td>
+                        </tr>
+                        <tr>
+                            <td>18059310000</td>
+                            <td>2018012501</td>
+                            <td>2018-1-25 12:00:00</td>
+                            <td>20180125001</td>
+                            <td>收入</td>
+                            <td>1000</td>
+                        </tr>
+                        <tr>
+                            <td>18059310000</td>
+                            <td>2018012501</td>
+                            <td>2018-1-25 12:00:00</td>
+                            <td>20180125001</td>
+                            <td>购买</td>
+                            <td>1000</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="message">
+                <h1>我的消息</h1>
+                <div class="panel panel-default" style="margin: 2% 0 0 3%">
+                    <!-- Default panel contents -->
+                    <div class="panel-heading">
+                        <div class="layui-form">
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">开始</label>
+                                    <div class="layui-input-inline">
+                                        <input type="text" class="layui-input" id="start_message" placeholder="yyyy-MM-dd HH:mm:ss">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">结束</label>
+                                    <div class="layui-input-inline">
+                                        <input type="text" class="layui-input" id="end_message" placeholder="yyyy-MM-dd HH:mm:ss">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <button class="btn btn-primary">搜索</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Table -->
+                    <table class="table">
+                        <tr>
+                            <th>发送者</th>
+                            <th>接收者</th>
+                            <th>消息内容</th>
+                            <th>时间</th>
+                        </tr>
+                        <tr>
+                            <td>18059310000</td>
+                            <td>2018012501</td>
+                            <td>2018-1-25 12:00:00</td>
+                            <td>20180125001</td>
+                        </tr>
+                        <tr>
+                            <td>18059310000</td>
+                            <td>2018012501</td>
+                            <td>2018-1-25 12:00:00</td>
+                            <td>20180125001</td>
+                        </tr>
+                        <tr>
+                            <td>18059310000</td>
+                            <td>2018012501</td>
+                            <td>2018-1-25 12:00:00</td>
+                            <td>20180125001</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="buy_order">
+                <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+                    <ul class="layui-tab-title orderTab">
+                        <li @click="waitOrder()" class="layui-this">未支付</li>
+                        <li @click="alreadyOrder()" >待收货</li>
+                        <li @click="allOrder()">全部订单</li>
+                    </ul>
+                    <div class="layui-tab-content orderCont" style="height: auto;">
+                        <div class="layui-tab-item layui-show">
+                           <!-- <h1 style="text-align: center" v-if="wait_hide">目前还没有待支付订单</h1>-->
+                            <div class="panel panel-default" v-for="(wait,w_key in showWait">
+                                <div class="panel-heading" style="background: none">
+                                    <p>待支付</p>
+                                    <p>
+                                        <span>{{ wait.time }}</span> |
+                                        <span>{{ wait.sellerid }}</span> |
+                                        订单号：<span>20180000{{ wait.orderid }}</span> |
+                                        <span>在线支付</span>
+                                    </p>
+                                     <p style="text-align: right;font-size: 15px">订单金额：￥
+                                            <b style="font-size: 18px">{{ wait.total }}</b>元
+                                     </p>
+                                </div>
+                                <div class="panel-body">
+                                    <table style="position: relative">
+                                        <tr style="position: absolute;right: 0">
+                                            <td class="mobile_xm_table_button">
+                                                <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none" @click="goToPay(wait.orderid)">立即支付</button><br>
+                                                <button class="btn btn-primary" style="color:black;background: none" @click="cancelOrder(wait.orderid)">取消订单</button>
+                                            </td>
+                                        </tr>
+                                        <tr style="height:100px"  class="waitTr" v-for="(value,key) in showWaitRelation" v-if="value.s_orderid == wait.orderid">
+                                            <!--删除订单中的个别商品-->
+                                            <td class="layui-icon showOrderIcon" style="width:1%;cursor: pointer;" @click="cancelChildTrade(value.s_id,wait.orderid)">&#x1006;</td>
+                                            <td style="width: 10%;">
+                                                <img :src="value.imgurl" class="trade_img">
+                                            </td>
+                                            <td style="width: 20%;">
+                                                <p>{{ value.tradename }}</p>
+                                                <p>{{ value.nowprice }} x {{ value.s_num }}</p>
+                                            </td>
+                                            <td class="mobile_xm_table"></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                            {if isset($pageToWait)}{$pageToWait}{/if}
+                        </div>
+                        <div class="layui-tab-item">
+                           <!-- <h1 style="text-align: center" v-if="yet_hide">目前还没有待处理订单</h1>-->
+                            <div class="panel panel-default" v-for="yet in showAlready">
+                                <div class="panel-heading" style="background: none">
+                                    <p v-if="yet.orderstate==3">订单待处理，等待卖家发货</p>
+                                    <p v-else>订单已出库，等待买家收货</p>
+                                    <p>
+                                        <span>{{ yet.time }}</span> |
+                                        <span>{{ yet.sellerid }}</span> |
+                                        订单号：<span>20180000{{ yet.orderid }}</span> |
+                                        <span>在线支付</span>
+                                    </p>
+                                    <p style="text-align: right;font-size: 15px">订单金额：￥
+                                        <b style="font-size: 18px">{{ yet.total }}</b>元
+                                    </p>
+                                </div>
+                                <div class="panel-body">
+                                    <table style="position: relative">
+                                        <tr style="position: absolute;right: 0">
+                                            <td class="mobile_xm_table_button">
+                                                <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none" v-if="yet.orderstate==3" >等待发货</button><br v-if="yet.orderstate==3">
+                                                <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none" v-if="yet.orderstate==4" @click="receipt(yet.orderid)">确认收货</button><br v-if="yet.orderstate==4">
+                                                <button class="btn btn-primary" style="color:black;background: none" v-if="yet.orderstate==3">退款</button>
+                                            </td>
+                                        </tr>
+                                        <tr style="height:100px"  class="waitTr" v-for="(val,k) in showAlreadyRelation" v-if="val.s_orderid == yet.orderid">
+                                            <!--删除订单中的个别商品-->
+                                            <td style="width: 10%;">
+                                                <img :src="val.imgurl" class="trade_img">
+                                            </td>
+                                            <td style="width: 20%;">
+                                                <p>{{ val.tradename }}</p>
+                                                <p>{{ val.nowprice }} x {{ val.s_num }}</p>
+                                            </td>
+                                            <td class="mobile_xm_table"></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                            {if isset($pageToAlready)}{$pageToAlready}{/if}
+                        </div>
+                        <div class="layui-tab-item">
+                            <div class="panel panel-default" v-for="all in showAlready">
+                                <div class="panel-heading" style="background: none">
+                                    <p v-if="all.orderstate==1">待支付</p>
+                                    <p v-if="all.orderstate==2">交易关闭</p>
+                                    <p v-if="all.orderstate==3">订单待处理，等待卖家发货</p>
+                                    <p v-if="all.orderstate==4">订单已出库，等待买家收货</p>
+                                    <p v-if="all.orderstate==5">交易成功</p>
+                                    <p>
+                                        <span>{{ all.time }}</span> |
+                                        <span>{{ all.sellerid }}</span> |
+                                        订单号：<span>20180000{{ all.orderid }}</span> |
+                                        <span>在线支付</span>
+                                    </p>
+                                    <p style="text-align: right;font-size: 15px">订单金额：￥
+                                        <b style="font-size: 18px">{{ all.total }}</b>元
+                                    </p>
+                                </div>
+                                <div class="panel-body">
+                                    <table style="position: relative">
+                                        <tr style="position: absolute;right: 0">
+                                            <td class="mobile_xm_table_button" v-if="all.orderstate==2 || all.orderstate==5">
+                                                <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none">申请售后</button><br>
+                                                <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none">订单详情</button><br>
+                                            </td>
+                                            <td class="mobile_xm_table_button" v-if="all.orderstate==1">
+                                                <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none"  @click="goToPay(all.orderid)">立即支付</button><br>
+                                                <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none" @click="cancelOrder(all.orderid)">取消订单</button><br>
+                                            </td>
+                                            <td class="mobile_xm_table_button" v-if="all.orderstate==4 || all.orderstate==3">
+                                                <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none" v-if="all.orderstate==3">等待发货</button><br v-if="all.orderstate==3">
+                                                <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none" v-if="all.orderstate==4" @click="receipt(all.orderid)">确认收货</button><br v-if="all.orderstate==4">
+                                                <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none">退款</button>
+                                            </td>
+                                        </tr>
+                                        <tr style="height:100px"  class="waitTr" v-for="(a,m) in showAlreadyRelation" v-if="a.s_orderid == all.orderid">
+                                            <!--删除订单中的个别商品-->
+                                            <td style="width: 10%;">
+                                                <img :src="a.imgurl" class="trade_img">
+                                            </td>
+                                            <td style="width: 20%;">
+                                                <p>{{ a.tradename }}</p>
+                                                <p>{{ a.nowprice }} x {{ a.s_num }}</p>
+                                            </td>
+                                            <td class="mobile_xm_table"></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                            {if isset($pageToAll)}{$pageToAll}{/if}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="boss_order">
+                <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+                    <ul class="layui-tab-title">
+                        <li class="layui-this">待发货</li>
+                        <li>全部订单</li>
+                    </ul>
+                    <div class="layui-tab-content" style="height: auto;">
+                        <div class="layui-tab-item layui-show">
+                            <div class="panel panel-default">
+                                <div class="panel-heading" style="background: none">
+                                    <p>已付款 待发货</p>
+                                    <p>
+                                        <span>2018-01-25 12:26:56</span> |
+                                        <span>欧阳飞雪</span> |
+                                        订单号：<span>10236547895</span> |
+                                        <span>在线支付</span>
+                                    </p>
+                                    <p style="text-align: right;font-size: 15px">订单金额：￥
+                                        <b style="font-size: 18px">895.00</b>元
+                                    </p>
+                                </div>
+                                <div class="panel-body">
+                                    <table>
+                                        <tr>
+                                            <td style="width: 10%;">
+                                                <img src="__STATIC__/images/qq.png" class="trade_img">
+                                            </td>
+                                            <td style="width: 20%;">
+                                                <p>科技时代的巴萨的框架啊</p>
+                                                <p>699.00 x 1</p>
+                                            </td>
+                                            <td style="" class="mobile_xm_table">
+                                                <button class="btn btn-primary" style="color:black;margin-bottom: 10px;background: none">一键发货</button><br>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-tab-item">
+                            <div class="panel panel-default">
+                                <div class="panel-heading" style="background: none">
+                                    <p>已回款</p>
+                                    <p>
+                                        <span>2018-01-25 12:26:56</span> |
+                                        <span>欧阳飞雪</span> |
+                                        订单号：<span>10236547895</span> |
+                                        <span>在线支付</span>
+                                    </p>
+                                    <p style="text-align: right;font-size: 15px">订单金额：￥
+                                        <b style="font-size: 18px">895.00</b>元
+                                    </p>
+                                </div>
+                                <div class="panel-body">
+                                    <table>
+                                        <tr>
+                                            <td style="width: 10%;">
+                                                <img src="__STATIC__/images/qq.png" class="trade_img">
+                                            </td>
+                                            <td style="width: 20%;">
+                                                <p>科技时代的巴萨的框架啊</p>
+                                                <p>699.00 x 1</p>
+                                            </td>
+                                            <td style="" class="mobile_xm_table">
+                                                <button class="btn btn-primary" style="color:black;background: none">订单详情</button>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="publish_normal">
+                <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+                    <ul class="layui-tab-title">
+                        <li class="layui-this">发布商品</li>
+                    </ul>
+                    <div class="layui-tab-content" style="height:auto;">
+                        <div class="layui-tab-item layui-show">
+                            <!--发布普通商品-->
+                            <form id="normal_form">
+                                <!--发布商品类型-->
+                                <div>
+                                    <select  v-model="selected" class="form-control input-lg select_mod" @change="actionType()">
+                                        <option value="">选择商品发布类型</option>
+                                        <option v-for="x in type"  :value="x.op">{{ x.name }}</option>
+                                    </select>
+                                </div>
+                                <br>
+                                <!--商品标题-->
+                                <textarea class="form-control" rows="2" maxlength="32" placeholder="商品标题/品牌品类都是买家喜欢搜索的/最长字符32位/" style="display: inline;width: 90%;font-size: 15px"></textarea>
+                                <!--活动开始结束时间-->
+                                <div class="layui-inline" v-if="judge">
+                                    <!--<label class="layui-form-label"></label>-->
+                                    <div class="layui-input-inline">
+                                        <input type="text" class="layui-input" id="start_action" placeholder="活动开始时间"  style="height: 50px"/>
+                                    </div>
+                                    <!--<label class="layui-form-label"></label>-->
+                                    <div class="layui-input-inline">
+                                        <input type="text" class="layui-input" id="end_action" placeholder="活动结束时间"  style="height: 50px"/>
+                                    </div>
+                                </div>
+                                <!--商品分类 自定义class为select_mod-->
+                                <div>
+                                    <label>
+                                        <select class="form-control input-lg select_mod" style="margin-top: 10px;">
+                                            <option>商品类型</option>
+                                            <option>数码</option>
+                                        </select>
+                                        <select class="form-control input-lg select_mod">
+                                            <option>商品品牌</option>
+                                            <option>数码</option>
+                                        </select>
+                                        <select class="form-control input-lg select_mod">
+                                            <option>新旧程度</option>
+                                            <option>九五新</option>
+                                        </select>
+                                    </label>
+                                </div>
+                                <!--商品价格 自定义id为normal_price 和 normal_old_price-->
+                                <br>
+                                    <div class="form-group">
+                                        <div class="input-group">
+                                            <div class="input-group-addon">￥</div>
+                                            <input type="text" class="form-control input-lg" id="normal_price" placeholder="商品全新价格" style="font-size: 15px"/>
+                                            <div class="input-group-addon">￥</div>
+                                            <input type="text" class="form-control input-lg" id="normal_old_price" placeholder="二手价格" style="font-size: 15px"/>
+                                        </div>
+                                    </div>
+                                <!--省 市 区联动 自定义class为select_mod-->
+                                <div style="font-size: 15px">
+                                    <label>
+                                        <select class="form-control input-lg select_mod" style="margin-top: 10px">
+                                            <option>省份</option>
+                                            <option>福建省</option>
+                                        </select>
+                                        <select class="form-control input-lg select_mod">
+                                            <option>市区</option>
+                                            <option>福州市</option>
+                                        </select>
+                                        <select class="form-control input-lg select_mod">
+                                            <option>区县</option>
+                                            <option>仓山区</option>
+                                        </select>
+                                    </label>
+                                </div>
+                                <!--商品描述/基本信息介绍-->
+                                <br>
+                                <textarea class="form-control" rows="4"  placeholder="商品描述/基本信息介绍" style="display: inline;width: 90%;font-size: 15px"></textarea>
+                                <!--默认图片上传 自定义id为 default 和 default_img-->
+                                <div class="layui-upload">
+                                    <button type="button" class="layui-btn" id="default">商品主图</button><br>
+                                    <img class="layui-upload-img" id="default_img"/>
+                                </div>
+                                <!--商品图片 自定义id为 more_pic_btn 和 more_picture-->
+                                <div class="layui-upload">
+                                    <button type="button" class="layui-btn" id="more_pic_btn">商品详情图</button>
+                                    <blockquote class="layui-elem-quote layui-quote-nm" style="margin-top: 10px;">
+                                        商品预览图,最多10张图片
+                                        <div class="layui-upload-list" id="more_picture"></div>
+                                    </blockquote>
+                                </div>
+                                <!--自定义class为 clear_picture id为publishNormal-->
+                                <button type="button" class="btn btn-primary btn-lg" id="publicNormal">发布商品</button>
+                                <input type="reset" class="btn btn-warning " value="重置信息">
+                                <button type="button" class="btn btn-danger clear_picture">清空图片</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="myGoods">
+                <h1>我的商品</h1>
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <img src="__STATIC__/images/qq.png" style="width: 80%;height: 80%;display: inline-block"/>
+                    </div>
+                    <div class="panel-footer" style="background: none;">
+                        <p style="overflow: hidden;word-break: keep-all">就肯定不死无法看就是点</p>
+                        <p>￥<em>59.00</em></p>
+                        <p style="color: red">
+                            <span>在售商品</span>
+                            <i class="layui-icon" style="float: right;cursor: pointer;font-size: 25px">&#xe640;</i>
+                            <i class="layui-icon" style="float: right;cursor: pointer;font-size: 25px">&#xe640;</i>
+                            <i class="layui-icon" style="float: right;cursor: pointer;font-size: 25px">&#xe640;</i>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="exit">10</div>
+            <div class="complain">11</div>
+        </div>
+        <div class="content_middle"></div>
+    </div><!--class="content" body主体区域-->
+<!--foot页尾 商城备案信息-->
+<div class="foot"></div>
+</div>
+</body>
+<script>
+    var whoIndex=location.href.substr(location.href.indexOf('who')+4,1);
+    var exit_login="{:url('frontIndex/Login/exitLogin')}";
+    var go_login="{:url('frontIndex/Login/login')}";
+    /*---个人中心用户信息修改--*/
+    var go_user="{:url('frontIndex/User/userCenter')}";
+    var go_add_money="{:url('frontIndex/User/addMoney')}";
+    var alter_heading="{:url('frontIndex/User/alterHead')}";
+    var go_alter_user="{:url('frontIndex/User/alterUser')}";
+    var go_sex="{$info['info'][0]['sex']}";
+    /*---获取省市区三级联动路径--*/
+    var get_province='{:url("frontIndex/User/getProvince")}';
+    var get_city='{:url("frontIndex/User/getCity")}';
+    var get_areas='{:url("frontIndex/User/getAreas")}';
+    var go_to_address='{:url("frontIndex/User/saveAddress")}';
+    var go_address_delete='{:url("frontIndex/User/deleteAddress")}';
+    var go_address_default='{:url("frontIndex/User/defaultAddress")}';
+    var go_address_alter='{:url("frontIndex/User/alterAddress")}';
+    var go_get_address_information='{:url("frontIndex/User/getAddressById")}';
+    var show_to_json_address='{if isset($info["address"])}{$info["address"]}{/if}';
+    var show_to_address=null;
+    if(show_to_json_address!=''){
+        show_to_address=JSON.parse(show_to_json_address).data;
+    }
+        /*----收藏商品-----*/
+    var show_to_json_collect='{if isset($info["collect"])}{$info["collect"]}{/if}';
+    var show_to_collect=null;
+    if(show_to_json_collect!=''){
+        show_to_collect=JSON.parse(show_to_json_collect).data;
+    }
+    var go_to_deleteCollect='{:url("frontIndex/User/deleteCollect")}';
+    /*---我的待支付订单--*/
+    var get_wait_order='{:url("frontIndex/User/userCenter")}?who=6&lg=0';
+    var show_to_json_wait = '{if isset($info["wait"])}{$info["wait"]}{/if}';
+    var show_to_wait=null;
+    var show_to_waitRelation=null;
+    if(show_to_json_wait!=''){
+        show_to_wait=JSON.parse(show_to_json_wait)[0].data;
+        show_to_waitRelation=JSON.parse(show_to_json_wait)[1];
+    }
+    var go_to_delete_wait='{:url("frontIndex/User/deleteWait")}';
+    var go_delete_childTrade='{:url("frontIndex/User/deleteChildTrade")}';
+    //获取已支付订单
+    var get_already_order='{:url("frontIndex/User/userCenter")}?who=6&lg=1';
+    var go_pay='{:url("frontIndex/User/pay")}';
+    var go_to_receipt='{:url("frontIndex/User/receipt")}';
+    var show_to_json_already = '{if isset($info["already"])}{$info["already"]}{/if}';
+    var show_to_already=null;
+    var show_to_alreadyRelation=null;
+    if(show_to_json_already!=''){
+        show_to_already =JSON.parse(show_to_json_already)[0].data;
+        show_to_alreadyRelation=JSON.parse(show_to_json_already )[1];
+    }
+    //全部订单
+    var get_all_order='{:url("frontIndex/User/userCenter")}?who=6&lg=2';
+</script>
+<script src="__JS__/font/user.js"></script>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0;" name="viewport" />
+    <title>账号信息</title>
+    <link rel="stylesheet" href="__CSS__/font/information.css"/>
+    <link rel="stylesheet" href="__STATIC__/bootstrap/css/bootstrap.min.css"/>
+    <script src="__STATIC__/public/jquery.js"></script>
+    <script src="__STATIC__/public/vue.js"></script>
+    <script src="__STATIC__/bootstrap/js/bootstrap.min.js"></script>
+    <script src="__STATIC__/layui/layui.all.js"></script>
+    <style>
+        @media (max-width: 768px) {
+            .safeWidth{
+                width:100%;
+                margin: 0 auto;
+            }
+            .info>input{
+                width:100%;
+                margin: 0;
+            }
+            .sex{
+                width: 100%;
+                margin: 0;
+            }
+            .info>.china>select{
+                width:100%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div id="information">
+    <!--修改密码模态框-->
+    <div class="modal fade" tabindex="-1" role="dialog" id="password" data-backdrop="false">
+        <div class="modal-dialog" role="document">
+        <div class="modal-content" style="margin-top: 200px">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">修改登陆密码</h4>
+            </div>
+            <div class="modal-body" style="text-align: center">
+                <form class="form-inline">
+                    <div class="form-group">
+                        <input type="password" class="form-control input-lg" v-model="old" @blur="checkOldPsd()" placeholder="旧密码">
+                    </div>
+                    <p class="tipInfo">原密码</p>
+                    <div class="form-group">
+                        <input type="password" class="form-control input-lg" v-model="newPsd" @blur="checkNewPsd()" placeholder="新密码">
+                    </div>
+                    <p class="tipInfo">新密码</p>
+                    <div class="form-group">
+                        <input type="password" class="form-control input-lg" v-model="newRePsd" @blur="checkNewRePsd" placeholder="确认新密码">
+                    </div>
+                    <p class="tipInfo">确认新密码</p>
+                </form>
+            </div>
+            <div class="modal-footer" style="text-align: center">
+                <button type="button" class="btn btn-primary" @click="keepPassword()">保存</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+    <!--短信验证模态框-->
+    <div class="modal fade" tabindex="-1" role="dialog" id="checkAll" data-backdrop="false">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content" style="margin-top: 200px">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">手机短信验证</h4>
+                </div>
+                <div class="modal-body" style="text-align: center">
+                    <p>为了保护帐号安全，需要验证手机有效性</p>
+                    <p>点击发送短信按钮，将会发送一条有验证码的短信至手机
+                        <span>{$info['info'][0]['phone']}</span>
+                    </p>
+                </div>
+                <div class="modal-footer" style="text-align: center">
+                    <button type="button" class="btn btn-primary">确定</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+<div class="safeWidth head">
+    <span>换换账号中心</span>
+        <a href="{:url('frontIndex/User/userCenter')}">
+            <button class="btn btn-info btn-lg">返回个人中心 </button>
+        </a>
+</div>
+<div class="safeWidth">
+    <div class="panel panel-default" v-if='show'>
+        <div class="panel-heading title">完善个人资料</div>
+        <div class="panel-body info">
+            <input class="form-control input-lg" type="text" placeholder="姓名" v-model="name" @blur="checkName()">
+            <p class="check">{{ userName }}</p>
+            <input class="form-control input-lg" type="text" placeholder="邮箱" v-model="email" @blur="checkEmail()">
+            <p class="check">{{ userEmail }}</p>
+            <input class="form-control input-lg" type="text" placeholder="身份证号" v-model="IDNum" @blur="checkIDNum()">
+            <p class="check">{{ idCard }}</p>
+            <label class="sex">
+                <select class="form-control input-lg" v-model="sex">
+                    <option value="男">男</option>
+                    <option value="女">女</option>
+                </select>
+            </label>
+            <p class="check" style="height: 15px"></p>
+            <label class="china">
+                <select class="form-control input-lg" name="province" v-model="province" @change="getCity()">
+                    <option v-for="x in provinceList" :value=" x.provinceid ">{{ x.province }}</option>
+                </select>
+                <select class="form-control input-lg" name="city" v-model="city" @change="getArea()">
+                    <option v-for="y in cityList" :value=" y.cityid ">{{ y.city }}</option>
+                </select>
+                <select class="form-control input-lg" name="areas" v-model="area">
+                    <option v-for="z in areasList" :value=" z.areaid ">{{ z.area }}</option>
+                </select>
+            </label>
+            <button class="btn btn-primary btn-lg" style="margin-top: 20px" @click="saveUser()">保存</button>
+        </div>
+    </div>
+    <div class="panel panel-default" v-if='hide'>
+        <div class="panel-heading title">账号管理</div>
+        <div class="panel-body userInfo">
+            <p>
+                <i class="glyphicon glyphicon-lock" style="font-size: 15px;color: orangered;"></i>
+                <span style="height: 30px;line-height: 30px;display: inline-block">账号密码</span>
+                <i>保护账号信息和登陆安全</i>
+                <button type="button" class="alterPassword btn btn-primary" data-toggle="modal" data-target="#password">修改</button>
+            </p>
+            <p>
+                <i class="glyphicon glyphicon-envelope" style="font-size: 15px;color: orangered"></i>
+                <span>安全邮箱</span>
+                <i>133086@qq.com</i>
+                <button type="button" class="alterEmail btn btn-primary"  data-toggle="modal" data-target="#checkAll">修改</button>
+            </p>
+            <p>
+                <i class="glyphicon glyphicon-phone" style="font-size:15px;color: orangered;"></i>
+                <span>安全手机</span>
+                <i>{$info['info'][0]['phone']}</i>
+                <button type="button" class="alterPhone btn btn-primary"   data-toggle="modal" data-target="#checkAll">修改</button>
+            </p>
+        </div>
+    </div>
+</div>
+</div>
+</body>
+<script>
+    var check_email='{:url("frontIndex/User/checkEmail")}';
+    var check_IDNum='{:url("frontIndex/User/checkIDNum")}';
+    var check_old_psd='{:url("frontIndex/User/checkOldPsd")}';
+    var go_to_keep_password='{:url("frontIndex/User/keepPassword")}';
+    var get_province='{:url("frontIndex/User/getProvince")}';
+    var get_city='{:url("frontIndex/User/getCity")}';
+    var get_areas='{:url("frontIndex/User/getAreas")}';
+    var save_user='{:url("frontIndex/User/saveUser")}';
+    var go_userCenter='{:url("frontIndex/User/userCenter")}';
+    var go_show="{$info['show_hide']['show']}";
+    var go_hide="{$info['show_hide']['hide']}";
+</script>
+<script src="__JS__/font/information.js"></script>
+</html>
