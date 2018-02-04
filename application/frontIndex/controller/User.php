@@ -167,10 +167,64 @@ class User extends Controller
                    }
                }
            }else if($tag==7){
-
-               $data=[
-                   'info' =>$user
-               ];
+               $lg=input('?get.mk')?input('mk'):'';
+               if($lg==0){
+                   $res=Db::table('t_order')
+                       ->where(['sellerid'=>$res[0]['userid']])
+                       ->where('orderstate',['=',3],['=',4],['=',6],'or')
+                       ->order('paytime')
+                       ->paginate(2,false,[
+                           'query' => ['who' => 7,'mk'=>0 ]
+                       ]);
+                   if(isset($res[0])){
+                       $list=[];
+                       for($i=0;$i<count($res);$i++){
+                           $list[]=$res[$i]['orderid'];
+                       }
+                       $bossWait=Db::table(['t_order_relation' => 'a' ,'t_trade' => 'b'])
+                           ->where('a.s_tradeid = b.tradeid')
+                           ->where(array('a.s_orderid' => array('IN', $list)))
+                           ->select();
+                       $page = $res->render();
+                       $this->assign('pageToBossWait', $page);
+                       $data=[
+                           'info' =>$user,
+                           'bossWait' =>json_encode([$res,$bossWait])
+                       ];
+                   }else{
+                       $data=[
+                           'info' =>$user
+                       ];
+                   }
+               }else{
+                   $res=Db::table('t_order')
+                       ->where(['sellerid'=>$res[0]['userid']])
+                       ->where('orderstate',['=',3],['=',4],['=',5],['=',6],['=',7],'or')
+                       ->order('paytime')
+                       ->paginate(2,false,[
+                           'query' => ['who' => 7,'mk'=>1 ]
+                       ]);
+                   if(isset($res[0])){
+                       $list=[];
+                       for($i=0;$i<count($res);$i++){
+                           $list[]=$res[$i]['orderid'];
+                       }
+                       $bossAll=Db::table(['t_order_relation' => 'a' ,'t_trade' => 'b'])
+                           ->where('a.s_tradeid = b.tradeid')
+                           ->where(array('a.s_orderid' => array('IN', $list)))
+                           ->select();
+                       $page = $res->render();
+                       $this->assign('pageToBossAll', $page);
+                       $data=[
+                           'info' =>$user,
+                           'bossAll' =>json_encode([$res,$bossAll])
+                       ];
+                   }else{
+                       $data=[
+                           'info' =>$user
+                       ];
+                   }
+               }
            }else if($tag==8){
                $data=[
                    'info' =>$user
@@ -755,5 +809,40 @@ class User extends Controller
             ->where('orderid',$id)
             ->select();
         echo json_encode($res);
+    }
+    //允许退款申请 2018/2/4
+    public function allowRefund(){
+        $session=$this->check_session();
+        if($session[1]){
+            $id=input('?post.id')?input('id'):'';
+            $res=Db::table('t_order')
+                ->where('orderid',$id)
+                ->update(['orderstate'=>7,'applyoktime'=>date('Y-m-d H:i:s',time())]);
+            if($res){
+                echo json_encode(config('errorMsg')['operation']['pay']['code_refund_allow_ok']);
+            }else{
+                echo json_encode(config('errorMsg')['operation']['pay']['code_refund_allow_fail']);
+            }
+        }else{
+            exit('登陆超时');
+        }
+    }
+    //一键发货 2018/2/4
+    public function sendTrade(){
+        $session=$this->check_session();
+        if($session[1]){
+            $id=input('?post.id')?input('id'):'';
+            $text=input('?post.text')?input('text'):'';
+            $res=Db::table('t_order')
+                ->where('orderid',$id)
+                ->update(['formid'=>$text,'orderstate'=>4,'deliver_time'=>date('Y-m-d H:i:s',time())]);
+            if($res){
+                echo json_encode(config('errorMsg')['operation']['pay']['code_send_ok']);
+            }else{
+                echo json_encode(config('errorMsg')['operation']['pay']['code_send_fail']);
+            }
+        }else{
+            exit('登陆超时');
+        }
     }
 }

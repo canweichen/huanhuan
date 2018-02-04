@@ -302,7 +302,9 @@ return [
                 "code_refund_ok" =>['msg'=>'您的退款申请已提交，等待商家审核.....','code'=>'2000','data'=>[]],
                 "code_refund_fail" =>['msg'=>'您的退款申请提交失败','code'=>'2006','data'=>[]],
                 "code_refund_cancel_ok" =>['msg'=>'退款取消成功','code'=>'2000','data'=>[]],
-                "code_refund_cancel_fail" =>['msg'=>'退款取消失败','code'=>'2007','data'=>[]]
+                "code_refund_cancel_fail" =>['msg'=>'退款取消失败','code'=>'2007','data'=>[]],
+                "code_refund_allow_ok" =>['msg'=>'允许买家退款成功','code'=>'2000','data'=>[]],
+                "code_refund_allow_fail" =>['msg'=>'允许买家退款失败','code'=>'2008','data'=>[]]
             ]
         ],
         'result' =>[

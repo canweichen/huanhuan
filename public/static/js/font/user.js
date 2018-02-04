@@ -204,6 +204,7 @@ function getUrlWho(){
     //获取菜单标志位#009688
     var who=location.href.substr(location.href.indexOf('who')+4,1);
     var whoLg=location.href.substr(location.href.indexOf('lg')+3,1);
+    var whoMk=location.href.substr(location.href.indexOf('mk')+3,1);
     var $div=$(".content_right").children("div");
     $div.css('display','none');
     var $dd=$(".content_left").find("dd");
@@ -211,6 +212,7 @@ function getUrlWho(){
     if(location.href.indexOf('who')!=-1){
        //我的订单标签页
         if(location.href.indexOf('lg')!=-1){
+           // alert(whoLg);
            var $body=$(".orderCont").children('div');
            $body.css('display','none');
            $body.eq(whoLg).css('display','block');
@@ -218,6 +220,15 @@ function getUrlWho(){
            $li.removeClass("layui-this");
            $li.eq(whoLg).addClass("layui-this");
        }
+        if(location.href.indexOf('mk')!=-1){
+            // alert(whoLg);
+            var $bodyMk=$(".orderContMk").children('div');
+            $bodyMk.css('display','none');
+            $bodyMk.eq(whoMk).css('display','block');
+            var $liMk=$(".orderTabMk").children('li');
+            $liMk.removeClass("layui-this");
+            $liMk.eq(whoMk).addClass("layui-this");
+        }
         $div.eq(who-1).css('display','block');
         $dd.eq(who-1).css('background','#009688');
     }else{
@@ -262,7 +273,13 @@ var app=new Vue({
         //全部订单
         showAll:show_to_all,
         showAllRelation:show_to_allRelation,
-        orderDetailsList:[]
+        orderDetailsList:[],
+        //卖家订单
+        showBossWait:show_bossWait,
+        showTrade:show_trade,
+        //卖家订单
+        showBossAll:show_bossAll,
+        showTradeAll:show_tradeAll
     },
     methods:{
         //充值
@@ -791,6 +808,60 @@ var app=new Vue({
                     this.orderDetailsList = JSON.parse(res)[0];
                 }.bind(this)
             })
+        },
+        //允许退款
+        allowRefund:function(id){
+            layer.confirm('允许买家退款？',function(m){
+                layer.close(m);
+                var k=layer.load();
+                $.ajax({
+                    type:'post',
+                    url:go_allow_refund,
+                    data:{id:id},
+                    success:function(res){
+                        layer.close(k);
+                        var result=JSON.parse(res);
+                        if(result.code==2000){
+                            layer.msg(result.msg,{icon:1,time:1500},function(){
+                                location.reload();
+                            })
+                        }else{
+                            layer.msg(result.msg,{icon:2,time:1500});
+                        }
+                    }
+                });
+            })
+        },
+        //一键发货
+        sendTrade:function(id){
+            layer.prompt({title:"录入快递单号",formType: 0,anim: 1},function(text,index){
+                layer.close(index);
+                var m=layer.load();
+                $.ajax({
+                    type:'post',
+                    url:go_send_trade,
+                    data:{id:id,text:text},
+                    success:function(res){
+                        layer.close(m);
+                        var result=JSON.parse(res);
+                        if(result.code==2000){
+                            layer.msg(result.msg,{icon:1,time:1500},function(){
+                                location.reload();
+                            })
+                        }else{
+                            layer.msg(result.msg,{icon:2,time:1500});
+                        }
+                    }
+                })
+            });
+        },
+        //获取已付款订单
+        waitSend:function(){
+            location.href=get_boss_order;
+        },
+        //获取全部订单
+        allBossOrder:function(){
+            location.href=get_boss_all_order;
         }
     },
     mounted: function () {
