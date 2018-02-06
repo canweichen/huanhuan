@@ -209,7 +209,7 @@
             <li class="layui-nav-item">
                 <a href="javascript:;"><img src={$info['info'][0]['headimg']} class="layui-nav-img">我</a>
                 <dl class="layui-nav-child">
-                    <dd><a href="{:url('user/User/information')}">完善个人资料</a></dd>
+                    <dd><a href="{:url('frontIndex/User/information')}">完善个人资料</a></dd>
                     <dd id="1a"><a href="javascript:;">{$info['info'][0]['userid']}</a></dd>
                     <dd  @click="exitLogin()"><a>退出登陆</a></dd>
                 </dl>
@@ -248,7 +248,7 @@
                     <li class="layui-nav-item layui-nav-itemed">
                         <a>发布闲置中心</a>
                         <dl class="layui-nav-child">
-                            <dd  id="8"><a href="{:url('frontIndex/User/userCenter')}?who=8">发布闲置</a></dd>
+                            <dd  id="8"><a href="{:url('frontIndex/PublishTrade/publish')}">发布闲置</a></dd>
                             <dd id="9"><a href="{:url('frontIndex/User/userCenter')}?who=9">我的商品</a></dd>
                         </dl>
                     </li>
@@ -734,15 +734,15 @@
                 </div>
             </div>
             <div class="publish_normal">
-                <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+                <!--<div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
                     <ul class="layui-tab-title">
                         <li class="layui-this">发布商品</li>
                     </ul>
                     <div class="layui-tab-content" style="height:auto;">
                         <div class="layui-tab-item layui-show">
-                            <!--发布普通商品-->
+                            &lt;!&ndash;发布普通商品&ndash;&gt;
                             <form id="normal_form">
-                                <!--发布商品类型-->
+                                &lt;!&ndash;发布商品类型&ndash;&gt;
                                 <div>
                                     <select  v-model="selected" class="form-control input-lg select_mod" @change="actionType()">
                                         <option value="">选择商品发布类型</option>
@@ -750,22 +750,22 @@
                                     </select>
                                 </div>
                                 <br>
-                                <!--商品标题-->
+                                &lt;!&ndash;商品标题&ndash;&gt;
                                 <textarea class="form-control" rows="2" maxlength="32" placeholder="商品标题/品牌品类都是买家喜欢搜索的/最长字符32位/" style="display: inline;width: 90%;font-size: 15px"></textarea>
-                                <!--活动开始结束时间-->
+                                &lt;!&ndash;活动开始结束时间&ndash;&gt;
                                 <div class="layui-inline" v-if="judge">
-                                    <!--<label class="layui-form-label"></label>-->
+                                    &lt;!&ndash;<label class="layui-form-label"></label>&ndash;&gt;
                                     <div class="layui-input-inline">
                                         <input type="text" class="layui-input" id="start_action" placeholder="活动开始时间"  style="height: 50px"/>
                                     </div>
-                                    <!--<label class="layui-form-label"></label>-->
+                                    &lt;!&ndash;<label class="layui-form-label"></label>&ndash;&gt;
                                     <div class="layui-input-inline">
                                         <input type="text" class="layui-input" id="end_action" placeholder="活动结束时间"  style="height: 50px"/>
                                     </div>
                                 </div>
-                                <!--商品分类 自定义class为select_mod-->
+                                &lt;!&ndash;商品分类 自定义class为select_mod&ndash;&gt;
                                 <div>
-                                    <label>
+                                   &lt;!&ndash; <label>&ndash;&gt;
                                         <select class="form-control input-lg select_mod" style="margin-top: 10px;">
                                             <option>商品类型</option>
                                             <option>数码</option>
@@ -778,9 +778,9 @@
                                             <option>新旧程度</option>
                                             <option>九五新</option>
                                         </select>
-                                    </label>
+                                    &lt;!&ndash;</label>&ndash;&gt;
                                 </div>
-                                <!--商品价格 自定义id为normal_price 和 normal_old_price-->
+                                &lt;!&ndash;商品价格 自定义id为normal_price 和 normal_old_price&ndash;&gt;
                                 <br>
                                     <div class="form-group">
                                         <div class="input-group">
@@ -790,9 +790,9 @@
                                             <input type="text" class="form-control input-lg" id="normal_old_price" placeholder="二手价格" style="font-size: 15px"/>
                                         </div>
                                     </div>
-                                <!--省 市 区联动 自定义class为select_mod-->
+                                &lt;!&ndash;省 市 区联动 自定义class为select_mod&ndash;&gt;
                                 <div style="font-size: 15px">
-                                    <label>
+                                  &lt;!&ndash;  <label>&ndash;&gt;
                                         <select class="form-control input-lg select_mod" style="margin-top: 10px">
                                             <option>省份</option>
                                             <option>福建省</option>
@@ -805,17 +805,17 @@
                                             <option>区县</option>
                                             <option>仓山区</option>
                                         </select>
-                                    </label>
+                                    &lt;!&ndash;</label>&ndash;&gt;
                                 </div>
-                                <!--商品描述/基本信息介绍-->
+                                &lt;!&ndash;商品描述/基本信息介绍&ndash;&gt;
                                 <br>
                                 <textarea class="form-control" rows="4"  placeholder="商品描述/基本信息介绍" style="display: inline;width: 90%;font-size: 15px"></textarea>
-                                <!--默认图片上传 自定义id为 default 和 default_img-->
+                                &lt;!&ndash;默认图片上传 自定义id为 default 和 default_img&ndash;&gt;
                                 <div class="layui-upload">
                                     <button type="button" class="layui-btn" id="default">商品主图</button><br>
                                     <img class="layui-upload-img" id="default_img"/>
                                 </div>
-                                <!--商品图片 自定义id为 more_pic_btn 和 more_picture-->
+                                &lt;!&ndash;商品图片 自定义id为 more_pic_btn 和 more_picture&ndash;&gt;
                                 <div class="layui-upload">
                                     <button type="button" class="layui-btn" id="more_pic_btn">商品详情图</button>
                                     <blockquote class="layui-elem-quote layui-quote-nm" style="margin-top: 10px;">
@@ -823,14 +823,14 @@
                                         <div class="layui-upload-list" id="more_picture"></div>
                                     </blockquote>
                                 </div>
-                                <!--自定义class为 clear_picture id为publishNormal-->
+                                &lt;!&ndash;自定义class为 clear_picture id为publishNormal&ndash;&gt;
                                 <button type="button" class="btn btn-primary btn-lg" id="publicNormal">发布商品</button>
                                 <input type="reset" class="btn btn-warning " value="重置信息">
                                 <button type="button" class="btn btn-danger clear_picture">清空图片</button>
                             </form>
                         </div>
                     </div>
-                </div>
+                </div>-->
             </div>
             <div class="myGoods">
                 <h1>我的商品</h1>

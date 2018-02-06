@@ -2,12 +2,12 @@
  * Created by Machenike on 2018/1/25.
  */
 $(function(){
-  /*  layui.use('element', function(){
+    layui.use('element', function(){
         var element = layui.element; //导航的hover效果、二级菜单等功能，需要依赖element模块
         //监听导航点击
         element.on('nav(demo)', function(elem){
         });
-    });*/
+    });
     //我的地址鼠标悬乎事件
     var $address=$(".address").children("div");
     $address.eq(1).css({borderColor:"lightBlue",boxShadow:"0px 0px  10px 5px lightBlue"});
@@ -62,13 +62,6 @@ $(function(){
         $div.css({display:"none"});
         $div.eq($(this).attr('id')-1).css({display:"block"});
     });*/
-    //清空多张商品图片--普通商品
-    $(".clear_picture").click(function(){
-       $("#more_picture").html("");
-    });
-    $("#end_action").click(function(){
-       //alert(123);
-    });
     //上传图片
     layui.use('upload', function() {
         var $ = layui.jquery ,
@@ -98,41 +91,6 @@ $(function(){
                 demoText.find('.demo-reload').on('click', function () {
                     uploadInst.upload();
                 });
-            }
-        });
-        //上传商品默认图片--普通商品
-        upload.render({
-            elem: '#default',
-            url: '/upload/',
-            before: function (obj) {
-                //预读本地文件示例，不支持ie8
-                console.log(obj);
-                obj.preview(function (index, file, result) {
-                    $('#default_img').attr('src', result); //图片链接（base64）
-                });
-            },
-            done: function (res) {
-                //如果上传失败
-                if (res.code > 0) {
-                    return layer.msg('上传失败');
-                }
-                //上传成功
-            }
-        });
-
-        //上传详情商品--多张--普通商品
-        upload.render({
-            elem: '#more_pic_btn',
-            url: '/upload/',
-            multiple: true,
-            before: function(obj){
-                //预读本地文件示例，不支持ie8
-                obj.preview(function(index, file, result){
-                    $('#more_picture').append('<img src="'+ result +'" alt="'+ file.name +'" class="layui-upload-img" style="width: 120px;height: 120px">');
-                });
-            },
-            done: function(res){
-                //上传完毕
             }
         });
     });
@@ -239,12 +197,6 @@ function getUrlWho(){
 var app=new Vue({
     el:'#my_app',
     data:{
-        judge:false,//判断活动商品的时间选项是否显示
-        selected:'',//定义select框的默认值
-        type:[
-            {name:"普通商品",op:1},
-            {name:"拍卖商品",op:2}
-        ],//option数据
         //初始化省市区绑定数据数组
         navMessage:'',
         seem:true,
@@ -305,14 +257,6 @@ var app=new Vue({
           }else{
               layer.msg('充值金额必须合法',{icon:0,time:2000});
           }
-        },
-        //拍卖商品和普通商品发布页面切换
-        actionType:function(){
-            if(this.selected==2){
-             this.judge=true;
-            }else{
-                this.judge=false;
-            }
         },
         //退出登陆事件
         exitLogin:function(){

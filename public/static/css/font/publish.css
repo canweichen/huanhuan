@@ -1,0 +1,25 @@
+*{
+    padding: 0;
+    margin: 0;
+}
+.safeWidth{
+    margin: 0 auto;
+    width: 960px;
+}
+#action_default_img{
+    width: 100px;
+    height: 100px;
+    display: inline-block;
+    margin: 10px 0;
+}
+#moreAction_picture{
+    height: auto;
+}
+.publish_normal .select_mod{
+    width: 33%;
+    display: inline;
+    font-size: 15px;
+}
+label{
+    width:100%;
+}

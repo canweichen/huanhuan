@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <title>发布商品</title>
+    <link rel="stylesheet" href="__STATIC__/layui/css/layui.css"  media="all"/>
+    <link rel="stylesheet" href="__STATIC__/bootstrap/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="__CSS__/font/publish.css"/>
+    <script src="__STATIC__/public/jquery.js"></script>
+    <script src="__STATIC__/public/vue.js"></script>
+    <script src="__STATIC__/bootstrap/js/bootstrap.min.js"></script>
+    <script src="__STATIC__/layui/layui.all.js"></script>
+    <style>
+        @media (max-width: 768px) {
+            .safeWidth{
+                width:100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="publish_normal safeWidth" id="app">
+    <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+        <ul class="layui-tab-title">
+            <li class="layui-this">发布商品</li>
+        </ul>
+        <div class="layui-tab-content" style="height:auto;">
+            <div class="layui-tab-item layui-show">
+                <!--发布普通商品-->
+                <form id="normal_form">
+                    <!--发布商品类型-->
+                    <div>
+                        <select  v-model="selected" class="form-control input-lg select_mod" @change="actionType()">
+                            <option value="">选择商品发布类型</option>
+                            <option v-for="x in type"  :value="x.op">{{ x.name }}</option>
+                        </select>
+                    </div>
+                    <br>
+                    <!--商品标题-->
+                    <textarea class="form-control" rows="2" maxlength="32" placeholder="商品标题/品牌品类都是买家喜欢搜索的/最长字符32位/" style="display: inline;width: 90%;font-size: 15px"></textarea>
+                    <!--活动开始结束时间-->
+                    <div class="layui-inline" v-if="judge">
+                        <!--<label class="layui-form-label"></label>-->
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input" id="start_action" placeholder="活动开始时间"  style="height: 50px"/>
+                        </div>
+                        <!--<label class="layui-form-label"></label>-->
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input" id="end_action" placeholder="活动结束时间"  style="height: 50px"/>
+                        </div>
+                    </div>
+                    <!--商品分类 自定义class为select_mod-->
+                    <div>
+                         <label>
+                        <select v-model="tradeType" @change="changeBranch()" class="form-control input-lg select_mod" style="margin-top: 10px;">
+                            <option v-for="type in typeList" :value="type.ts_id">{{ type.sortname }}</option>
+                        </select>
+                        <select v-model="childType"  class="form-control input-lg select_mod">
+                            <option v-for="brand in brandList" :value="brand.ts_id">{{ brand.sortname }}</option>
+                        </select>
+                        <select v-model="degreeTrade" class="form-control input-lg select_mod">
+                            <option v-for="deg in degreeList" :value="deg.o_id">{{ deg.o_degree }}</option>
+                        </select>
+                        </label>
+                    </div>
+                    <!--商品价格 自定义id为normal_price 和 normal_old_price-->
+                    <br>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="input-group-addon">￥</div>
+                            <input type="text" class="form-control input-lg" id="normal_price" placeholder="商品全新价格" style="font-size: 15px"/>
+                            <div class="input-group-addon">￥</div>
+                            <input type="text" class="form-control input-lg" id="normal_old_price" placeholder="二手价格" style="font-size: 15px"/>
+                        </div>
+                    </div>
+                    <!--省 市 区联动 自定义class为select_mod-->
+                    <div style="font-size: 15px">
+                          <label>
+                        <select v-model="province" @change="getCity([1,1,1])" class="form-control input-lg select_mod" style="margin-top: 10px">
+                            <option v-for="x in provinceList" :value="x.provinceid" province>{{ x.province }}</option>
+                        </select>
+                        <select v-model="city" @change="getArea([1,1,1])" class="form-control input-lg select_mod">
+                            <option v-for="y in cityList" :value="y.cityid">{{ y.city }}</option>
+                        </select>
+                        <select v-model="area" class="form-control input-lg select_mod">
+                            <option v-for="z in areasList" :value="z.areaid">{{ z.area }}</option>
+                        </select>
+                        </label>
+                    </div>
+                    <!--商品描述/基本信息介绍-->
+                    <br>
+                    <textarea class="form-control" rows="4"  placeholder="商品描述/基本信息介绍" style="display: inline;width: 90%;font-size: 15px"></textarea>
+                    <!--默认图片上传 自定义id为 default 和 default_img-->
+                    <div class="layui-upload">
+                        <button type="button" class="layui-btn" id="default">商品主图</button><br>
+                        <img class="layui-upload-img" id="default_img"/>
+                    </div>
+                    <!--商品图片 自定义id为 more_pic_btn 和 more_picture-->
+                    <div class="layui-upload">
+                        <button type="button" class="layui-btn" id="more_pic_btn">商品详情图</button>
+                        <blockquote class="layui-elem-quote layui-quote-nm" style="margin-top: 10px;">
+                            商品预览图,最多10张图片
+                            <div class="layui-upload-list" id="more_picture"></div>
+                        </blockquote>
+                    </div>
+                    <!--自定义class为 clear_picture id为publishNormal-->
+                    <button type="button" class="btn btn-primary btn-lg" id="publicNormal">发布商品</button>
+                    <button type="button" class="btn btn-primary btn-lg" id="next" v-if="seem">下一步</button>
+                    <input type="reset" class="btn btn-warning " value="重置信息">
+                    <button type="button" class="btn btn-danger clear_picture">清空图片</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    var typeData='{if $info["data"]}{$info["data"]}{/if}';
+    var type=JSON.parse(typeData).type;
+    var degree=JSON.parse(typeData).degree;
+    var brand=JSON.parse(typeData).brand;
+    var get_node_type='{:url("frontIndex/PublishTrade/getNodeType")}';
+    var get_province='{:url("frontIndex/User/getProvince")}';
+    var get_city='{:url("frontIndex/User/getCity")}';
+    var get_areas='{:url("frontIndex/User/getAreas")}';
+</script>
+<script src="__JS__/font/publish.js"></script>
+</html>
